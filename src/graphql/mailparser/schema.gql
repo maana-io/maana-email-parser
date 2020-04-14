@@ -1,0 +1,58 @@
+# Scalars
+scalar Date
+scalar JSON
+
+# Boilerplate
+type Info {
+  id: ID!
+  name: String!
+  description: String
+}
+
+type Address {
+  id: ID!
+  name: String
+  address: String
+  group: [String]
+}
+
+type Attachement {
+  filename: String
+  contentType: String
+  contentDisposition: String
+  checksum: String
+  size: Int
+  content: String
+  contentId: String
+  cid: String
+  related: Boolean
+}
+
+type HeaderLine {
+  id: ID!
+  key: String
+  line: String
+}
+
+type Mail {
+  id: ID!
+  subject: String
+  from: [Address]
+  to: [Address]
+  cc: [Address]
+  date: Date
+  messageId: String
+  inReplyTo: String
+  replyTo: Address
+  references: [String]
+  html: String
+  text: String
+  textAsHtml: String
+  attachements: [Attachement]
+  headerLines: [HeaderLine]
+}
+
+type Query {
+  info: Info
+  parse(rawEmail: String!): Mail
+}
