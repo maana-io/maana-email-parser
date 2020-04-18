@@ -7,74 +7,36 @@ import { simpleParser } from 'mailparser'
 
 require('dotenv').config()
 
-const SERVICE_ID = process.env.SERVICE_ID
-const SELF = SERVICE_ID || 'io.maana.template'
-
 // dummy in-memory store
 
 export const resolver = {
   Query: {
-    info: async (_, args, { client }) => {
-      let remoteId = SERVICE_ID
-
-      try {
-        if (client) {
-          const query = gql`
-            query info {
-              info {
-                id
-              }
-            }
-          `
-          const {
-            data: {
-              info: { id }
-            }
-          } = await client.query({ query })
-          remoteId = id
-        }
-      } catch (e) {
-        log(SELF).error(
-          `Info Resolver failed with Exception: ${e.message}\n${print.external(
-            e.stack
-          )}`
-        )
-      }
-
-      return {
-        id: SERVICE_ID,
-        name: 'io.maana.template',
-        description: `Maana Q Knowledge Service template using ${remoteId}`
-      }
-    },
-
     parse: async (_, { rawEmail }, { client }) => {
       const email = await simpleParser(rawEmail)
-      
+      console.log(email)
       return {
         ...email,
         id: email.messageId,
-        from: email.from.value.map(addressValue => ({
+        from: email.from.value.map((addressValue) => ({
           id: uuid(),
-          ...addressValue
+          ...addressValue,
         })),
-        to: email.to.value.map(addressValue => ({
+        to: email.to.value.map((addressValue) => ({
           id: uuid(),
-          ...addressValue
+          ...addressValue,
         })),
-        cc: email.cc?.value?.map(addressValue => ({
+        cc: email.cc?.value?.map((addressValue) => ({
           id: uuid(),
-          ...addressValue
+          ...addressValue,
         })),
-        attachements: email.attachements
-          ? email.attachements.map(attachement => ({
+        attachments: email.attachments
+          ? email.attachments.map((attachement) => ({
               id: uuid(),
-              ...attachement
+              ...attachement,
             }))
           : null,
-        headerLines: email.headerLines.map(h => ({ id: uuid(), ...h}))  
-          
+        headerLines: email.headerLines.map((h) => ({ id: uuid(), ...h })),
       }
-    }
-  }
+    },
+  },
 }
