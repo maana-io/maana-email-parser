@@ -9,7 +9,7 @@ export const resolver = {
   Query: {
     parse: async (_, { id, rawEmail }) => {
       const parsedEmail = await simpleParser(rawEmail)
-      console.log(JSON.stringify(parsedEmail, null, 2))
+      // console.log(JSON.stringify(parsedEmail, null, 2))
 
       const email = {
         ...parsedEmail,
