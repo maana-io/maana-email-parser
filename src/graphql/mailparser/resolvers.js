@@ -1,17 +1,10 @@
-import { log, print } from 'io.maana.shared'
-
-import { gql } from 'apollo-server-express'
-import pubsub from '../../pubsub'
-import uuid from 'uuid'
 import { simpleParser } from 'mailparser'
 
 require('dotenv').config()
 
-// dummy in-memory store
-
 export const resolver = {
   Query: {
-    parse: async (_, { rawEmail }, { client }) => {
+    parse: async (_, { rawEmail }) => {
       const email = await simpleParser(rawEmail)
       console.log(email)
       return {
