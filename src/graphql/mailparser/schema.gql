@@ -1,8 +1,6 @@
 type Address {
   id: ID!
   name: String
-  address: String
-  group: [String]
 }
 
 type Attachment {
@@ -20,29 +18,28 @@ type Attachment {
 
 type HeaderLine {
   id: ID!
-  key: String
   line: String
 }
 
 type Mail {
   id: ID!
   subject: String
-  from: [Address]
-  to: [Address]
+  from: [Address!]!
+  to: [Address!]!
   cc: [Address]
   bcc: [Address]
-  date: Date
-  messageId: String
+  date: Date!
+  messageId: String!
   inReplyTo: String
   replyTo: Address
   references: [String]
-  html: String
+  html: Boolean
   text: String
   textAsHtml: String
   attachments: [Attachment]
-  headerLines: [HeaderLine]
+  headerLines: [HeaderLine!]!
 }
 
 type Query {
-  parse(rawEmail: String!): Mail
+  parse(id: ID, rawEmail: String!): Mail!
 }
