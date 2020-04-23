@@ -27,7 +27,7 @@ type Email {
   to: [Address!]!
   cc: [Address]
   bcc: [Address]
-  date: Date!
+  date: DateTime!
   messageId: String!
   inReplyTo: String
   replyTo: Address

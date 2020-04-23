@@ -1,0 +1,18 @@
+query info {
+  info {
+    id
+    name
+    version
+    description
+  }
+}
+
+query parse($id: ID!, $rawEmail: String!) {
+  parse(id: $id, rawEmail: $rawEmail) {
+    id
+    date
+  }
+}
+
+# Variables (JSON)
+# {"id":"allen-p/_sent_mail/1.","rawEmail":"Message-ID: <18782981.1075855378110.JavaMail.evans@thyme>\nDate: Mon, 14 May 2001 16:39:00 -0700 (PDT)\nFrom: phillip.allen@enron.com\nTo: tim.belden@enron.com\nSubject: \nMime-Version: 1.0\nContent-Type: text/plain; charset=us-ascii\nContent-Transfer-Encoding: 7bit\nX-From: Phillip K Allen\nX-To: Tim Belden <Tim Belden/Enron@EnronXGate>\nX-cc: \nX-bcc: \nX-Folder: \\Phillip_Allen_Jan2002_1\\Allen, Phillip K.\\'Sent Mail\nX-Origin: Allen-P\nX-FileName: pallen (Non-Privileged).pst\n\nHere is our forecast\n\n "}
