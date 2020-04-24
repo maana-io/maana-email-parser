@@ -7,7 +7,7 @@ import {
   counter,
   initMetrics,
   log,
-  print
+  print,
 } from 'io.maana.shared'
 
 // middleware to support GraphQL
@@ -16,6 +16,7 @@ import { ApolloServer } from 'apollo-server-express'
 import cors from 'cors'
 // routing engine
 import express from 'express'
+import bodyParser from 'body-parser'
 // Keep GraphQL stuff nicely factored
 import glue from 'schemaglue'
 import http from 'http'
@@ -29,7 +30,7 @@ import request from 'request-promise-native'
 require('dotenv').config()
 
 const options = {
-  mode: 'js' // default
+  mode: 'js', // default
   // ignore: '**/somefileyoudonotwant.js'
 }
 const schemaPath = path.join(
@@ -42,7 +43,7 @@ const glueRes = glue(schemaPath, options)
 // Compile schema
 export const schema = makeExecutableSchema({
   typeDefs: glueRes.schema,
-  resolvers: glueRes.resolver
+  resolvers: glueRes.resolver,
 })
 
 //
@@ -50,7 +51,7 @@ export const schema = makeExecutableSchema({
 // - allow this service to be a client of Maana Q's Computational Knowledge Graph
 //
 let client
-const clientSetup = token => {
+const clientSetup = (token) => {
   if (!client && CKG_ENDPOINT_URL) {
     // construct graphql client using endpoint and context
     client = BuildGraphqlClient(CKG_ENDPOINT_URL, (_, { headers }) => {
@@ -58,8 +59,8 @@ const clientSetup = token => {
       return {
         headers: {
           ...headers,
-          authorization: token ? `Bearer ${token}` : ''
-        }
+          authorization: token ? `Bearer ${token}` : '',
+        },
       }
     })
   }
@@ -85,12 +86,15 @@ const CKG_ENDPOINT_URL = process.env.CKG_ENDPOINT_URL
 
 const app = express()
 
+app.use(bodyParser.json({ limit: '50mb', extended: true }))
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }))
+
 //
 // CORS
 //
 const corsOptions = {
   origin: `http://${PUBLICNAME}:3000`,
-  credentials: true // <-- REQUIRED backend setting
+  credentials: true, // <-- REQUIRED backend setting
 }
 
 app.use(cors(corsOptions)) // enable all CORS requests
@@ -101,7 +105,7 @@ app.get('/', (req, res) => {
 })
 
 const defaultSocketMiddleware = (connectionParams, webSocket) => {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     log(SELF).warn(
       'Socket Authentication is disabled. This should not run in production.'
     )
@@ -112,7 +116,7 @@ const defaultSocketMiddleware = (connectionParams, webSocket) => {
 initMetrics(SELF.replace(/[\W_]+/g, ''))
 const graphqlRequestCounter = counter('graphqlRequests', 'it counts')
 
-const initServer = async options => {
+const initServer = async (options) => {
   const { httpAuthMiddleware, socketAuthMiddleware } = options
 
   const socketMiddleware = socketAuthMiddleware || defaultSocketMiddleware
@@ -120,17 +124,17 @@ const initServer = async options => {
   const server = new ApolloServer({
     schema,
     subscriptions: {
-      onConnect: socketMiddleware
+      onConnect: socketMiddleware,
     },
     context: async ({ req }) => {
       return {
-        client
+        client,
       }
-    }
+    },
   })
 
   server.applyMiddleware({
-    app
+    app,
   })
 
   const httpServer = http.createServer(app)
@@ -153,18 +157,18 @@ const initServer = async options => {
         grant_type: 'client_credentials',
         client_id: process.env.REACT_APP_PORTAL_AUTH_CLIENT_ID,
         client_secret: process.env.REACT_APP_PORTAL_AUTH_CLIENT_SECRET,
-        audience: process.env.REACT_APP_PORTAL_AUTH_IDENTIFIER
+        audience: process.env.REACT_APP_PORTAL_AUTH_IDENTIFIER,
       }
       const formData = querystring.stringify(form)
       const contentLength = formData.length
       const requestConfig = {
         headers: {
           'Content-Length': contentLength,
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
         uri: tokenUri,
         body: formData,
-        method: 'POST'
+        method: 'POST',
       }
       const response = JSON.parse(await request(requestConfig))
       token = response.access_token

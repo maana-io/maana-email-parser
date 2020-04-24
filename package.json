@@ -13,7 +13,7 @@
     "prettier": "./node_modules/.bin/prettier --write \"src/**/*.{js,jsx}\"",
     "start": "babel-node ./src/start.dev.js",
     "dbg": "nodemon --inspect ./src/start.dev.js --exec babel-node -e js",
-    "dev": "nodemon ./src/start.dev.js --exec babel-node -e js"
+    "dev": " fuser -k 8050/tcp ; nodemon ./src/start.dev.js  --delay 1500ms --exec babel-node -e js"
   },
   "lint-staged": {
     "src/**/*.{js,jsx,json,css}": [
@@ -40,6 +40,7 @@
     "graphql-tools": "^5.0.0",
     "io.maana.shared": "3.3.9",
     "jwks-rsa": "^1.8.0",
+    "lodash": "^4.17.15",
     "mailparser": "^2.7.7",
     "node-fetch": "^2.6.0",
     "node-json-color-stringify": "^1.1.0",
