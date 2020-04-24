@@ -3,20 +3,27 @@ const lodash = require('lodash')
 require('node-json-color-stringify')
 require('dotenv').config()
 
-const regex = /(?:"?([^"]*)"?\s)?(?:<.+>?)/
+// const regex = /(?:"?([^"]*)"?\s)?(?:<.+>?)/
+const regex = /(?:"*'?([^"]*)'"*\s)?(?:<.+>?)/
 const parseXAddress = (input) => {
   let m
 
   // console.log('input', input)
   const unparsed = input.split(':')[1].trim()
+  // console.log('unparsed', unparsed)
   if (!unparsed.length) return
   const multiples = unparsed.split(',').map((x) => x.trim())
   // console.log('multiples', multiples)
 
   const results = multiples.map((x) => {
-    if ((m = regex.exec(x)) !== null) return m[1]
+    if ((m = regex.exec(x)) !== null) {
+      // console.log('m', m[1])
+      return m[1]
+    }
+    // console.log('x', x)
     return x
   })
+  // console.log('results', results)
   return results
 }
 
