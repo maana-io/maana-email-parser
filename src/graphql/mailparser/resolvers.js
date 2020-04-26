@@ -3,28 +3,104 @@ const lodash = require('lodash')
 require('node-json-color-stringify')
 require('dotenv').config()
 
-// const regex = /(?:"?([^"]*)"?\s)?(?:<.+>?)/
-const regex = /(?:"*'?([^"]*)'"*\s)?(?:<.+>?)/
-const parseXAddress = (input) => {
+function compareInsensitive(a, b) {
+  return a.localeCompare(b, undefined, { sensitivity: 'accent' }) === 0
+}
+
+// strip the X-*: line header
+const XHeaderRE = /^(?:x-\w*):\s*/i
+const stripXHeader = (input) => input.replace(XHeaderRE, '')
+
+// replace "" -> "
+const DoubleDoubleQuotesRE = /""/g
+const replaceDoubleDoubleQuotes = (input) =>
+  input.replace(DoubleDoubleQuotesRE, `"`)
+
+// replace "' and '" -> "
+const SingleDoubleQuotePairsRE = /"'|'"/g
+const replaceSingleDoubleQuotes = (input) =>
+  input.replace(SingleDoubleQuotePairsRE, `"`)
+
+// extract unquoted CSV with *bonus* commas
+const AltSplitRE = /([^<]*<[^>]*>),?\s?/g
+const altSplit = (input) => {
   let m
 
-  // console.log('input', input)
-  const unparsed = input.split(':')[1].trim()
-  // console.log('unparsed', unparsed)
-  if (!unparsed.length) return
-  const multiples = unparsed.split(',').map((x) => x.trim())
-  // console.log('multiples', multiples)
-
-  const results = multiples.map((x) => {
-    if ((m = regex.exec(x)) !== null) {
-      // console.log('m', m[1])
-      return m[1]
+  const out = []
+  while ((m = AltSplitRE.exec(input)) !== null) {
+    // This is necessary to avoid infinite loops with zero-width matches
+    if (m.index === AltSplitRE.lastIndex) {
+      regex.lastIndex++
     }
-    // console.log('x', x)
-    return x
+    out.push(m[1])
+  }
+  return out
+}
+
+// split quoted CSV
+const UnquotedCommaRE = /(?:,\s*)(?=(?:[^"]|"[^"]*")*$)/g
+const splitOnUnquotedCommas = (input) => input.split(UnquotedCommaRE)
+
+// extract names from an email address x-* header line
+const ExtractName1RE = /(?:'([^']*)')/
+const ExtractName2RE = /(?:"?([^"<>]*)"?)?(?:<[^>]*>)?/
+const ExtractName3RE = /(?:<([^>]*)>)/
+const extractName = (input) => {
+  let m = ExtractName1RE.exec(input)
+  if (!m || !m[1]) {
+    m = ExtractName2RE.exec(input)
+    if (!m || !m[1]) {
+      m = ExtractName3RE.exec(input)
+      if (!m || !m[1]) {
+        // console.log('Failed to extract name:', input)
+        return
+      }
+    }
+  }
+  return m[1].trim()
+}
+// const input = `'psorrells@periwinklefoundation.org'`
+// console.log(extractName(input))
+
+const parseXAddresses = (headerLine, addresses) => {
+  // pre-process
+  let cleanInput = stripXHeader(headerLine)
+  cleanInput = replaceDoubleDoubleQuotes(cleanInput)
+  cleanInput = replaceSingleDoubleQuotes(cleanInput)
+  if (!cleanInput) return addresses
+
+  // split comma-separated values (except inside quotes)
+  let useEntries = splitOnUnquotedCommas(cleanInput)
+  let isAlt = false
+  if (useEntries.length !== addresses.length) {
+    // alternative split stratey
+    useEntries = altSplit(cleanInput)
+    if (useEntries.length !== addresses.length) {
+      // console.group('neither x-* header parse matches target list')
+      // console.log('addresses', addresses)
+      // console.log('headerLine', headerLine)
+      // console.groupEnd()
+      return addresses
+    }
+    isAlt = true
+  }
+
+  // extract just the names
+  const names = useEntries.map((e) => (e ? extractName(e) : undefined))
+
+  addresses.forEach((x, i) => {
+    const name = names[i]
+    if (
+      !x.name &&
+      name &&
+      name.length &&
+      !name.toLowerCase().includes(x.id.toLowerCase())
+    ) {
+      x.name = name
+    }
   })
-  // console.log('results', results)
-  return results
+  // if (isAlt) console.log('using alt split', headerLine, addresses)
+  return addresses
 }
 
 const parseAddresses = (input) =>
@@ -36,50 +112,35 @@ export const resolver = {
       const parsedEmail = await simpleParser(rawEmail)
       // console.log(JSON.stringify(parsedEmail, null, 2))
 
-      let xFrom, xTo, xCC, xBCC
       const headerLines = parsedEmail.headerLines.map((h) => {
-        switch (h.key.toLowerCase()) {
-          case 'x-from':
-            xFrom = parseXAddress(h.line)
-            break
-          case 'x-to':
-            xTo = parseXAddress(h.line)
-            break
-          case 'x-cc':
-            xCC = parseXAddress(h.line)
-            break
-          case 'x-bcc':
-            xBCC = parseXAddress(h.line)
-            break
-          default:
-            break
-        }
         return {
           id: h.key,
           line: h.line,
         }
       })
 
-      const notSame = (x, i, y) =>
-        x ? (x[i] !== y ? x[i] : undefined) : undefined
+      const getXHeader = (key) => headerLines.filter((x) => x.id === key)[0]
 
-      const extractEmailAndName = (field, xCollection) => {
-        const res = parsedEmail[field]
-          ? parseAddresses(parsedEmail[field]).map((a, i) => ({
-              id: a.id,
-              name: !lodash.isEmpty(a.name)
-                ? a.name
-                : notSame(xCollection, i, a.id),
-            }))
-          : []
+      const extractEmailAndName = (field) => {
+        const source = parsedEmail[field]
+        if (!source) return
+
+        const parsedAddresses = parseAddresses(source)
+        if (!parsedAddresses) return
+
+        const header = getXHeader(`x-${field}`)
+        if (!header) return
+
+        const res = parseXAddresses(header.line, parsedAddresses)
         // if (res && res.length) console.log(`${field}:`, res)
         return res
       }
 
-      const from = extractEmailAndName('from', xFrom)
-      const to = extractEmailAndName('to', xTo)
-      const cc = extractEmailAndName('cc', xCC)
-      const bcc = extractEmailAndName('bcc', xBCC)
+      // Parse the
+      const from = extractEmailAndName('from') || []
+      const to = extractEmailAndName('to') || []
+      const cc = extractEmailAndName('cc')
+      const bcc = extractEmailAndName('bcc')
 
       const email = {
         ...parsedEmail,
