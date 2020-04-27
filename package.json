@@ -2,7 +2,7 @@
   "name": "maana-www-email-parser",
   "author": "Maana, Inc.",
   "license": "MIT",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Maana Email Parser",
   "main": "src/start.js",
   "repository": "git@github.com:maana-io/maana-www-email-parser.git",
