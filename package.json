@@ -1,14 +1,14 @@
 {
-  "name": "maana-email-parser",
+  "name": "maana-www-email-parser",
   "author": "Maana, Inc.",
   "license": "MIT",
   "version": "1.0.7",
   "description": "Maana Email Parser",
   "main": "src/start.js",
-  "repository": "git@github.com:maana-io/maana-email-parser.git",
+  "repository": "git@github.com:maana-io/maana-www-email-parser.git",
   "scripts": {
-    "docker-build": "docker build -t maana-email-parser .",
-    "docker-run": "docker run -p 8050:8050 maana-email-parser",
+    "docker-build": "docker build -t maana-www-email-parser .",
+    "docker-run": "docker run -p 8050:8050 maana-www-email-parser",
     "precommit": "lint-staged",
     "prettier": "./node_modules/.bin/prettier --write \"src/**/*.{js,jsx}\"",
     "start": "babel-node ./src/start.dev.js",

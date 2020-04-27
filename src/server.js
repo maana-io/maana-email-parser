@@ -70,7 +70,7 @@ const clientSetup = (token) => {
 // Server setup
 //
 // Our service identity
-const SELF = process.env.SERVICE_ID || 'maana-service'
+const SELF = process.env.SERVICE_ID || 'maana-www-email-service'
 
 // HTTP port
 const PORT = process.env.PORT
