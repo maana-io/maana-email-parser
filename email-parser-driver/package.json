@@ -1,0 +1,22 @@
+{
+  "name": "mail-driver",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "bin": {
+    "test-mail": "index.js"
+  },
+  "keywords": [],
+  "author": "Donald Thompson <witt3rd@witt3rd.com> (http://witt3rd.com/)",
+  "license": "MIT",
+  "dependencies": {
+    "command-line-args": "^5.1.1",
+    "command-line-usage": "^6.1.0",
+    "graphql-request": "^1.8.2",
+    "ora": "^4.0.4",
+    "papaparse": "^5.2.0"
+  }
+}
